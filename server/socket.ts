@@ -81,7 +81,7 @@ class Game {
       client.socket.on('build', (data: { buildingName: BuildingName, pos: { x: number, y: number } }) => {
         const plan: BuildingPlan | undefined = buildingPlans.filter(x => x.name === data.buildingName)[0]
         if (!plan) console.error('Building plan missing')
-        if (player.town.canBuild(plan)) {
+        if (player.town.canBuild(plan, data.pos)) {
           player.town.build(plan, data.pos)
         }
       })
@@ -143,8 +143,8 @@ class Town {
   private blueprints: BuildingPlan[] = [...buildingPlans]
 
   constructor () {
-    const rows: number = 5
-    const cols: number = 5
+    const rows: number = 4
+    const cols: number = 4
     const grid: (Building | 'empty')[][] = Array.from({ length: cols }).map(x => Array.from({ length: rows }, () => 'empty'))
     this.grid = grid
     this.init()
@@ -168,7 +168,8 @@ class Town {
     return Math.max(...this.buildings.map(x => x.id)) + 1
   }
 
-  public canBuild (buildingPlan: BuildingPlan): boolean {
+  public canBuild (buildingPlan: BuildingPlan, pos: { x: number, y: number }): boolean {
+    if (this.grid[pos.y][pos.x] !== 'empty') return false
     for (const key of Object.keys(buildingPlan.cost) as Resource[]) {
       if (this.resources[key] < buildingPlan.cost[key]!) return false
     }
